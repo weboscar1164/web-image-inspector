@@ -1,5 +1,5 @@
 export const analyzeImages = async (url: string) => {
-	const res = await fetch("http//:127.0.0.1:80000/analyze", {
+	const res = await fetch("http://127.0.0.1:8000/analyze", {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",

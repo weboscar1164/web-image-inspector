@@ -9,9 +9,15 @@ def extract_images(url:str):
     }
 
     response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.text, "html.parser")
+    html = response.content
+    soup = BeautifulSoup(html, "html.parser")
+
+    if response.status_code != 200:
+        return {"count":0, "images":[]}
+    
     
     image_urls = set()
+    images = []
 
     for img in soup.find_all("img"):
 
@@ -33,12 +39,33 @@ def extract_images(url:str):
             
         # 絶対URL化
         full_url = urljoin(url, src)
+
+        # 重複除去
+        if full_url in image_urls:
+            continue
+
+        width = img.get("width")
+        height = img.get("height")
+
+        if width and height:
+            if int(width) < 100 or int(height) < 100:
+             continue
         
         # ゴミ画像除外
         if is_valid_image(full_url):
             image_urls.add(full_url)
-   
-    return list(image_urls)
+
+            images.append({
+                "src": full_url,
+                "alt": img.get("alt") or "",
+                "width": img.get("width"),
+                "height": img.get("height")
+            })
+
+    return {
+        "count": len(images),
+        "images": images
+    }
 
 def is_valid_image(url: str):
 
@@ -56,9 +83,10 @@ def is_valid_image(url: str):
         return False
     
     # 拡張子チェック（簡易）
-    if not any(ext in url.lower() for ext in [".jpg", ".jpeg", ".png",".webp", ".svg" ]):
+    if not any(ext in url.lower() for ext in [".jpg", ".jpeg", ".png",".webp" ]):
         return False
 
+    
      
     
     return True
