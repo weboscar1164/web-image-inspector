@@ -13,11 +13,23 @@ function App() {
 	const [loading, setLoading] = useState(false);
 	const [selectedImage, setSelectedImage] = useState<string | null>(null);
 	const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
+	const [gridWidth, setGridWidth] = useState(0);
 
 	const isAllSelected =
 		images.length > 0 && images.every((img) => selectedImages.has(img.src));
 
-	const hanldeAnalyze = async () => {
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		try {
+			new URL(url);
+		} catch {
+			return;
+		}
+
+		await handleAnalyze();
+	};
+
+	const handleAnalyze = async () => {
 		setLoading(true);
 		try {
 			const data = await analyzeImages(url);
@@ -74,32 +86,41 @@ function App() {
 	return (
 		<div className="app">
 			<header>
-				<h1>Web Image Inspector</h1>
+				<div className="headerContainer" style={{ width: gridWidth }}>
+					<h1>Web Image Inspector</h1>
 
-				<input
-					type="text"
-					value={url}
-					onChange={(e) => setUrl(e.target.value)}
-					placeholder="https://example.com"
-					style={{ width: "300px" }}
-				/>
+					<form onSubmit={handleSubmit}>
+						<input
+							type="text"
+							value={url}
+							onChange={(e) => setUrl(e.target.value)}
+							placeholder="https://example.com"
+							style={{ width: "300px" }}
+						/>
 
-				<button onClick={hanldeAnalyze}>Analyze</button>
-				<button onClick={handleDownload}>
-					Download Selected ({selectedImages.size})
-				</button>
-				<button onClick={toggleSelectAll}>
-					{isAllSelected ? "Deselect all" : "Select all"}
-				</button>
+						<button type="submit">Analyze</button>
+					</form>
+					<button onClick={handleDownload}>
+						Download Selected ({selectedImages.size})
+					</button>
+					<button onClick={toggleSelectAll}>
+						{isAllSelected ? "Deselect all" : "Select all"}
+					</button>
+				</div>
 			</header>
 
 			<main>
-				{loading && <p>Loading...</p>}
+				{loading && (
+					<div className="loading">
+						<p>Loading...</p>
+					</div>
+				)}
 				<ImageGrid
 					images={images}
 					onClickImage={(src) => setSelectedImage(src)}
 					selectedImages={selectedImages}
 					onToggleSelect={toggleSelect}
+					onGridWidthChange={setGridWidth}
 				/>
 				{selectedImage && (
 					<div className="modal" onClick={() => setSelectedImage(null)}>

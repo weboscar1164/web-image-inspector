@@ -22,28 +22,38 @@ header {
 	z-index: 15;
 	background: #f5f6f8;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-	h1 {
-		margin-top: 0;
-		margin-bottom: 10px;
-	}
+	display: flex;
+	justify-content: center;
 
-	input {
-		padding: 8px;
-		margin-right: 8px;
-		border-radius: 8px;
-		border: 1px solid #000;
-	}
+	.headerContainer {
+		form {
+			display: inline-block;
+		}
 
-	button {
-		border-radius: 8px;
-		margin-right: 8px;
-		padding: 8px 12px;
-		cursor: pointer;
-		border: 1px solid #000;
-		transition: background-color 0.3s;
+		h1 {
+			margin-top: 0;
+			margin-bottom: 10px;
+		}
 
-		&:hover {
-			background: #ddd;
+		input {
+			padding: 8px;
+			margin-right: 8px;
+			border-radius: 8px;
+			border: 1px solid #000;
+		}
+
+		button {
+			border-radius: 8px;
+			margin-top: 5px;
+			margin-right: 8px;
+			padding: 8px 12px;
+			cursor: pointer;
+			border: 1px solid #000;
+			transition: background-color 0.3s;
+
+			&:hover {
+				background: #ddd;
+			}
 		}
 	}
 }
@@ -56,6 +66,8 @@ header {
 	}
 
 	&Wrapper {
+		display: flex;
+		justify-content: center;
 		width: 100%;
 		max-width: 1200px;
 		height: 100%;
@@ -70,6 +82,7 @@ header {
 	overflow: hidden;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 	transition: 0.2s;
+	animation: fadeIn 0.8s ease;
 
 	&:hover {
 		transform: translateY(-4px);
@@ -139,11 +152,36 @@ header {
 	cursor: pointer;
 }
 
+.loading {
+	width: 100%;
+	height: 100%;
+	background: rgba(255, 255, 255, 0.421);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	p {
+		animation: loading 1.7s infinite ease;
+	}
+}
+
 @keyframes fadeIn {
 	from {
 		opacity: 0;
 	}
 	to {
 		opacity: 1;
+	}
+}
+
+@keyframes loading {
+	0% {
+		opacity: 0;
+	}
+	50% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
 	}
 }

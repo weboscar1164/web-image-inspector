@@ -7,6 +7,7 @@ type Props = {
 	onClickImage: (src: string) => void;
 	selectedImages: Set<string>;
 	onToggleSelect: (src: string) => void;
+	onGridWidthChange?: (width: number) => void;
 };
 
 type GridChildProps = {
@@ -20,14 +21,18 @@ const ImageGrid = ({
 	onClickImage,
 	selectedImages,
 	onToggleSelect,
+	onGridWidthChange,
 }: Props) => {
 	const wrapperRef = useRef<HTMLDivElement>(null);
 	const [size, setSize] = useState({ width: 0, height: 0 });
 
-	const ITEM_SIZE = 200;
-	const columnCount = Math.max(1, Math.floor(size.width / ITEM_SIZE));
+	const CARD_WIDTH = 200;
+	const CARD_HEIGHT = 215;
+	const GAP = 12;
+	const CELL_SIZE = CARD_WIDTH + GAP;
+	const columnCount = Math.max(1, Math.floor(size.width / CELL_SIZE));
 	const rowCount = Math.ceil(images.length / columnCount);
-	const gridWidth = columnCount * ITEM_SIZE;
+	const gridWidth = columnCount * CELL_SIZE;
 
 	useEffect(() => {
 		if (!wrapperRef.current) return;
@@ -44,6 +49,10 @@ const ImageGrid = ({
 		return () => observer.disconnect();
 	}, []);
 
+	useEffect(() => {
+		onGridWidthChange?.(gridWidth);
+	}, [gridWidth, onGridWidthChange]);
+
 	const { width, height } = size;
 
 	return (
@@ -52,11 +61,14 @@ const ImageGrid = ({
 				{width > 0 && (
 					<Grid
 						columnCount={columnCount}
-						columnWidth={ITEM_SIZE}
+						columnWidth={CARD_WIDTH + GAP}
 						rowCount={rowCount}
-						rowHeight={ITEM_SIZE}
+						rowHeight={CARD_HEIGHT + GAP}
 						height={height}
 						width={gridWidth}
+						style={{
+							padding: GAP / 2,
+						}}
 					>
 						{({ columnIndex, rowIndex, style }: GridChildProps) => {
 							const index = rowIndex * columnCount + columnIndex;
@@ -66,7 +78,13 @@ const ImageGrid = ({
 							const isSelected = selectedImages.has(image.src);
 
 							return (
-								<div style={style}>
+								<div
+									style={{
+										...style,
+										padding: GAP / 2,
+										boxSizing: "border-box",
+									}}
+								>
 									<div className={`card ${isSelected ? "selected" : ""}`}>
 										<input
 											type="checkbox"
