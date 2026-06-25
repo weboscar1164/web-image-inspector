@@ -1,19 +1,14 @@
-import { FixedSizeGrid as Grid } from "react-window";
 import type { ImageData } from "../Types";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
+import ImageList from "@mui/material/ImageList";
+import ImageListItem from "@mui/material/ImageListItem";
 
 type Props = {
 	images: ImageData[];
-	onClickImage: (src: string) => void;
+	onClickImage: (image: ImageData) => void;
 	selectedImages: Set<string>;
 	onToggleSelect: (src: string) => void;
-	onGridWidthChange?: (width: number) => void;
-};
-
-type GridChildProps = {
-	columnIndex: number;
-	rowIndex: number;
-	style: React.CSSProperties;
+	headerHeight: number;
 };
 
 const ImageGrid = ({
@@ -21,18 +16,26 @@ const ImageGrid = ({
 	onClickImage,
 	selectedImages,
 	onToggleSelect,
-	onGridWidthChange,
+	headerHeight,
 }: Props) => {
 	const wrapperRef = useRef<HTMLDivElement>(null);
+	const [loaded, setLoaded] = useState(false);
 	const [size, setSize] = useState({ width: 0, height: 0 });
 
 	const CARD_WIDTH = 200;
-	const CARD_HEIGHT = 215;
 	const GAP = 12;
 	const CELL_SIZE = CARD_WIDTH + GAP;
 	const columnCount = Math.max(1, Math.floor(size.width / CELL_SIZE));
-	const rowCount = Math.ceil(images.length / columnCount);
-	const gridWidth = columnCount * CELL_SIZE;
+
+	useEffect(() => {
+		if (images.length > 0) {
+			setLoaded(false);
+			requestAnimationFrame(() => {
+				setLoaded(true);
+			});
+		}
+		// console.log(images);
+	}, [images]);
 
 	useEffect(() => {
 		if (!wrapperRef.current) return;
@@ -49,63 +52,55 @@ const ImageGrid = ({
 		return () => observer.disconnect();
 	}, []);
 
-	useEffect(() => {
-		onGridWidthChange?.(gridWidth);
-	}, [gridWidth, onGridWidthChange]);
-
-	const { width, height } = size;
+	const truncate = (text: string | undefined, maxLength: number): string => {
+		return text
+			? text.length > maxLength
+				? text.slice(0, maxLength) + "..."
+				: text
+			: "";
+	};
 
 	return (
-		<div className="gridOuter">
-			<div className="gridWrapper" ref={wrapperRef}>
-				{width > 0 && (
-					<Grid
-						columnCount={columnCount}
-						columnWidth={CARD_WIDTH + GAP}
-						rowCount={rowCount}
-						rowHeight={CARD_HEIGHT + GAP}
-						height={height}
-						width={gridWidth}
-						style={{
-							padding: GAP / 2,
-						}}
-					>
-						{({ columnIndex, rowIndex, style }: GridChildProps) => {
-							const index = rowIndex * columnCount + columnIndex;
-							const image = images[index];
-							if (!image) return null;
-
-							const isSelected = selectedImages.has(image.src);
-
-							return (
-								<div
-									style={{
-										...style,
-										padding: GAP / 2,
-										boxSizing: "border-box",
-									}}
-								>
-									<div className={`card ${isSelected ? "selected" : ""}`}>
-										<input
-											type="checkbox"
-											checked={isSelected}
-											onChange={() => onToggleSelect(image.src)}
-										/>
-										<img
-											src={image.src}
-											alt={image.alt}
-											onClick={() => onClickImage(image.src)}
-										/>
-										<p>{image.alt}</p>
-									</div>
+		<div
+			className="container"
+			ref={wrapperRef}
+			style={{ paddingTop: headerHeight }}
+		>
+			<ImageList
+				cols={columnCount}
+				gap={12}
+				sx={{
+					overflow: "visible",
+				}}
+			>
+				{images.map((image, index) => {
+					const isSelected = selectedImages.has(image.src);
+					return (
+						<ImageListItem key={image.src}>
+							<div
+								className={`card ${isSelected ? "selected" : ""} ${loaded ? "show" : ""}`}
+								style={{ transitionDelay: `${index * 20}ms` }}
+							>
+								<input
+									type="checkbox"
+									checked={isSelected}
+									onChange={() => onToggleSelect(image.src)}
+								/>
+								<div className="cardImgFrame">
+									<img
+										src={image.src}
+										alt={image.alt}
+										onClick={() => onClickImage(image)}
+									/>
 								</div>
-							);
-						}}
-					</Grid>
-				)}
-			</div>
+								<p>{truncate(image.alt, 29)}</p>
+							</div>
+						</ImageListItem>
+					);
+				})}
+			</ImageList>
 		</div>
 	);
 };
 
-export default ImageGrid;
+export default memo(ImageGrid);

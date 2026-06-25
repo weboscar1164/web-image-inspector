@@ -1,6 +1,6 @@
 export interface ImageData {
 	src: string;
 	alt?: string;
-	with?: string;
-	height?: string;
+	width: number;
+	height: number;
 }

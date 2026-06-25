@@ -3,12 +3,11 @@ body {
 	background: #f5f6f8;
 	font-family: sans-serif;
 	flex: 1;
-	overflow: hidden;
+	overflow-x: hidden;
 }
 
 main {
 	flex: 1;
-	overflow: hidden;
 }
 
 .app {
@@ -17,22 +16,77 @@ main {
 	flex-direction: column;
 }
 
-header {
-	height: 140px;
+.container {
+	width: 100%;
+	max-width: 1400px;
+	margin: auto;
+	padding: 0 16px;
+	box-sizing: border-box;
+}
+
+.header {
+	height: auto;
 	z-index: 15;
 	background: #f5f6f8;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 	display: flex;
-	justify-content: center;
+	justify-content: space-between;
+	padding-bottom: 8px;
+	position: fixed;
+	width: 100%;
 
-	.headerContainer {
+	&-compact {
+		.headerContainer {
+			h1 {
+				font-size: 20px;
+			}
+		}
+		.headerExtra {
+			max-height: 0;
+			opacity: 0;
+			pointer-events: none;
+		}
+	}
+
+	button {
+		border-radius: 8px;
+		margin-top: 5px;
+		margin-right: 8px;
+		padding: 8px 12px;
+		cursor: pointer;
+		border: 1px solid #000;
+		transition: background-color 0.3s;
+
+		&:hover {
+			background: #ddd;
+		}
+		svg {
+			font-size: 18px;
+		}
+	}
+
+	&Container {
+		padding-top: 10px;
+		display: flex;
+		flex-direction: column;
+		h1 {
+			margin: 0;
+			margin-right: 10px;
+			font-size: 30px;
+			transition: font-size 0.25s ease;
+		}
+	}
+	&Upper {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		gap: 8px;
+	}
+
+	&Form {
 		form {
 			display: inline-block;
-		}
-
-		h1 {
-			margin-top: 0;
-			margin-bottom: 10px;
 		}
 
 		input {
@@ -41,37 +95,76 @@ header {
 			border-radius: 8px;
 			border: 1px solid #000;
 		}
+	}
+
+	&Summary {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-wrap: wrap;
 
 		button {
-			border-radius: 8px;
-			margin-top: 5px;
-			margin-right: 8px;
-			padding: 8px 12px;
-			cursor: pointer;
-			border: 1px solid #000;
-			transition: background-color 0.3s;
+			padding: 5px 12px;
+		}
+		&Left {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			flex-wrap: wrap;
 
-			&:hover {
-				background: #ddd;
+			h4 {
+				margin: 0;
+			}
+			p {
+				padding-left: 15px;
+				margin: 0;
 			}
 		}
 	}
-}
 
-.grid {
-	&Outer {
-		height: 100%;
+	&Filter {
+		overflow: hidden;
 		display: flex;
-		justify-content: center;
+		align-items: center;
+		flex-wrap: wrap;
+		opacity: 0;
+		max-height: 0;
+		padding-top: 0;
+		transition:
+			max-height 0.3s ease,
+			opacity 0.2s ease,
+			padding-top 0.3s ease;
+
+		h4 {
+			margin: 0;
+		}
+
+		&--open {
+			max-height: 200px;
+			opacity: 1;
+			padding-top: 5px;
+		}
 	}
 
-	&Wrapper {
-		display: flex;
-		justify-content: center;
-		width: 100%;
-		max-width: 1200px;
-		height: 100%;
-		box-sizing: border-box;
+	@media (max-width: 768px) {
+		&Upper {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+
+		&Form {
+			width: 100%;
+
+			form {
+				display: flex;
+				width: 100%;
+			}
+
+			input {
+				flex: 1;
+				min-width: 0;
+			}
+		}
 	}
 }
 
@@ -82,15 +175,44 @@ header {
 	overflow: hidden;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 	transition: 0.2s;
-	animation: fadeIn 0.8s ease;
+	opacity: 0;
+	transform: translateY(8px);
+	transition:
+		opacity 0.3s ease,
+		box-shadow 0.2s ease;
+
+	&.show {
+		opacity: 1;
+		transform: translateY(0);
+	}
 
 	&:hover {
-		transform: translateY(-4px);
-		box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+		box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 	}
 
 	&.selected {
-		outline: 3px solid #4caf50;
+		box-shadow:
+			0 0 0 3px #4caf50,
+			0 6px 14px rgba(0, 0, 0, 0.15);
+		// outline: 3px solid #4caf50;
+	}
+
+	&ImgFrame {
+		background-color: #fff;
+
+		background-image:
+			linear-gradient(45deg, #ddd 25%, transparent 25%),
+			linear-gradient(-45deg, #ddd 25%, transparent 25%),
+			linear-gradient(45deg, transparent 75%, #ddd 75%),
+			linear-gradient(-45deg, transparent 75%, #ddd 75%);
+
+		background-size: 20px 20px;
+
+		background-position:
+			0 0,
+			0 10px,
+			10px -10px,
+			-10px 0px;
 	}
 
 	img {
@@ -102,11 +224,12 @@ header {
 
 	p {
 		font-size: 12px;
-		padding: 6px 8px;
+		padding: 10px 8px;
 		color: #555;
 		height: 36px;
 		overflow: hidden;
 		line-height: 1.4;
+		margin: 0;
 	}
 
 	input {
@@ -120,38 +243,121 @@ header {
 }
 
 .modal {
-	animation: fadeIn 0.3s ease;
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
+	animation: fadeIn 0.25s ease;
 
-	background: rgba(0, 0, 0, 0.8);
+	position: fixed;
+	inset: 0;
+
+	background: rgba(0, 0, 0, 0.82);
 
 	display: flex;
 	justify-content: center;
 	align-items: center;
 
-	z-index: 1000;
+	padding: 32px;
 
-	img {
-		max-width: 90%;
-		max-height: 90%;
-		border-radius: 10px;
+	z-index: 1000;
+	&ImageFrame {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+
+		padding: 20px;
+
+		background-color: #fff;
+
+		background-image:
+			linear-gradient(45deg, #ddd 25%, transparent 25%),
+			linear-gradient(-45deg, #ddd 25%, transparent 25%),
+			linear-gradient(45deg, transparent 75%, #ddd 75%),
+			linear-gradient(-45deg, transparent 75%, #ddd 75%);
+
+		background-size: 20px 20px;
+
+		background-position:
+			0 0,
+			0 10px,
+			10px -10px,
+			-10px 0px;
+		img {
+			width: 100%;
+			max-height: 75vh;
+
+			object-fit: contain;
+
+			border-radius: 8px;
+			box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+		}
+	}
+	&Wrapper {
+		position: relative;
+
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+
+		width: 100%;
+		max-width: 1100px;
+		max-height: 90vh;
+
+		padding: 0;
+
+		background: #1b1b1b;
+		border-radius: 18px;
+
+		box-shadow:
+			0 10px 30px rgba(0, 0, 0, 0.4),
+			0 0 0 1px rgba(255, 255, 255, 0.05);
+
+		overflow: hidden;
+	}
+	&TextFrame {
+		padding: 0 20px 20px 20px;
+
+		p {
+			margin: 0;
+
+			color: #f3f3f3;
+
+			font-size: 14px;
+			line-height: 1.6;
+
+			word-break: break-word;
+
+			padding-inline: 4px;
+		}
 	}
 }
+
 .close {
 	position: absolute;
-	top: 20px;
-	right: 30px;
-	font-size: 30px;
-	color: white;
-	background: none;
-	border: none;
-	cursor: pointer;
-}
+	top: 18px;
+	right: 22px;
 
+	width: 40px;
+	height: 40px;
+
+	border: none;
+	border-radius: 999px;
+
+	background: rgba(255, 255, 255, 0.08);
+
+	color: white;
+
+	font-size: 24px;
+	line-height: 1;
+
+	cursor: pointer;
+
+	transition:
+		background 0.2s ease,
+		transform 0.15s ease;
+
+	&:hover {
+		background: rgba(255, 255, 255, 0.18);
+		transform: scale(1.05);
+	}
+}
 .loading {
 	width: 100%;
 	height: 100%;
