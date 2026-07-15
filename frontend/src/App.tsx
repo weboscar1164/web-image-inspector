@@ -12,6 +12,18 @@ import {
 	isVertical,
 } from "./utils/imageHelpers";
 import SettingsIcon from "@mui/icons-material/Settings";
+import { SUMMARY_ITEMS } from "./constants/summaryDefinitions";
+import {
+	ASPECT_RATIO_ITEMS,
+	FILTER_ITEMS,
+} from "./constants/filterDefinitions";
+import { useLocalStorageState } from "./app/hooks/hooks";
+
+type SummaryId = (typeof SUMMARY_ITEMS)[number]["id"];
+type FilterId = (typeof FILTER_ITEMS)[number]["id"];
+type FilterState = Record<FilterId, boolean>;
+type AspectRatioId = (typeof ASPECT_RATIO_ITEMS)[number]["id"];
+type VisibleAspectRatioId = Exclude<AspectRatioId, "all">;
 
 function App() {
 	const headerRef = useRef<HTMLElement>(null);
@@ -23,10 +35,70 @@ function App() {
 	const [selectedImage, setSelectedImage] = useState<ImageData | null>(null);
 	const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
 	const [showDetail, setShowDetail] = useState(false);
-	const [filters, setFilters] = useState({
+	const [filters, setFilters] = useState<FilterState>({
 		noAlt: false,
-		aspectRatio: "",
 	});
+	const [aspectRatio, setAspectRatio] = useState<AspectRatioId>("all");
+
+	const [showSettings, setShowSettings] = useState(false);
+
+	// Summary
+
+	const getLocalStorageItem = <T,>(key: string, defaultValue: T): T => {
+		try {
+			const saved = localStorage.getItem(key);
+
+			if (!saved) return defaultValue;
+
+			return {
+				...defaultValue,
+				...JSON.parse(saved),
+			};
+		} catch {
+			return defaultValue;
+		}
+	};
+
+	const [visibleSummaryItems, setVisibleSummaryItems] = useLocalStorageState(
+		"visibleSummaryItems",
+
+		{
+			total: true,
+			noAlt: true,
+			vertical: true,
+			horizontal: true,
+			square: true,
+		},
+	);
+
+	// Filter
+
+	const [visibleFilterItems, setVisibleFilterItems] = useState<
+		Record<FilterId, boolean>
+	>(() =>
+		getLocalStorageItem("visibleFilterItems", {
+			noAlt: true,
+		}),
+	);
+	const [visibleAspectRatioItems, setVisibleAspectRatioItems] = useState<
+		Record<VisibleAspectRatioId, boolean>
+	>(() =>
+		getLocalStorageItem("visibleAspectRatioItems", {
+			vertical: true,
+			horizontal: true,
+			square: true,
+		}),
+	);
+
+	const hasAspectRatioFilter = Object.values(visibleAspectRatioItems).some(
+		Boolean,
+	);
+
+	const aspectRatioItems = hasAspectRatioFilter
+		? ASPECT_RATIO_ITEMS.filter(
+				(item) => item.id === "all" || visibleAspectRatioItems[item.id],
+			)
+		: [];
 
 	const isAllSelected =
 		images.length > 0 && images.every((img) => selectedImages.has(img.src));
@@ -36,7 +108,7 @@ function App() {
 			return false;
 		}
 
-		switch (filters.aspectRatio) {
+		switch (aspectRatio) {
 			case "vertical":
 				return isVertical(img);
 
@@ -46,6 +118,7 @@ function App() {
 			case "square":
 				return isSquare(img);
 
+			case "all":
 			default:
 				return true;
 		}
@@ -59,12 +132,26 @@ function App() {
 	const resetViewState = () => {
 		setFilters({
 			noAlt: false,
-			aspectRatio: "",
 		});
+		setAspectRatio("all");
 		setSelectedImages(new Set());
 		setSelectedImage(null);
 		setShowDetail(false);
 	};
+
+	const summaryValues: Record<SummaryId, number> = {
+		total: images.length,
+		noAlt: noAltCount,
+		vertical: verticalCount,
+		horizontal: horizontalCount,
+		square: squareCount,
+	};
+
+	const summaryItems = SUMMARY_ITEMS.map((item) => ({
+		...item,
+		value: summaryValues[item.id],
+		visible: visibleSummaryItems[item.id],
+	}));
 
 	useEffect(() => {
 		if (!headerRef.current) return;
@@ -101,6 +188,27 @@ function App() {
 			window.removeEventListener("scroll", handleScroll);
 		};
 	}, []);
+
+	useEffect(() => {
+		localStorage.setItem(
+			"visibleSummaryItems",
+			JSON.stringify(visibleSummaryItems),
+		);
+	}, [visibleSummaryItems]);
+
+	useEffect(() => {
+		localStorage.setItem(
+			"visibleFilterItems",
+			JSON.stringify(visibleFilterItems),
+		);
+	}, [visibleFilterItems]);
+
+	useEffect(() => {
+		localStorage.setItem(
+			"visibleAspectRatioItems",
+			JSON.stringify(visibleAspectRatioItems),
+		);
+	}, [visibleAspectRatioItems]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -210,28 +318,17 @@ function App() {
 						<div className="headerSummary">
 							<div className="headerSummaryLeft">
 								<h4>サマリー：</h4>
-								<div className="headerSummaryItem">
-									<span>画像数</span>
-									<strong>{images.length}</strong>
-								</div>
-								<div className="headerSummaryItem">
-									<span>altなし</span>
-									<strong>{noAltCount}</strong>
-								</div>
-								<div className="headerSummaryItem">
-									<span>縦長</span>
-									<strong>{verticalCount}</strong>
-								</div>
-								<div className="headerSummaryItem">
-									<span>横長</span>
-									<strong>{horizontalCount}</strong>
-								</div>
-								<div className="headerSummaryItem">
-									<span>正方形</span>
-									<strong>{squareCount}</strong>
-								</div>
+								{summaryItems &&
+									summaryItems
+										.filter((item) => item.visible)
+										.map((summaryItem) => (
+											<div className="headerSummaryItem" key={summaryItem.id}>
+												<span>{summaryItem.label}</span>
+												<strong>{summaryItem.value}</strong>
+											</div>
+										))}
 							</div>
-							<button>
+							<button onClick={() => setShowSettings(true)}>
 								<SettingsIcon />
 							</button>
 						</div>
@@ -240,74 +337,39 @@ function App() {
 						>
 							<h4>フィルタ</h4>
 
-							<span>
-								<input
-									type="checkbox"
-									id="noAlt"
-									checked={filters.noAlt}
-									onChange={(e) =>
-										setFilters((prev) => ({ ...prev, noAlt: e.target.checked }))
-									}
-								/>
-								<label htmlFor="noAlt">Altなし</label>
-							</span>
-							<span>
-								<input
-									type="radio"
-									name="aspect_ratio"
-									id="vertical"
-									checked={filters.aspectRatio === ""}
-									onChange={() =>
-										setFilters((prev) => ({
-											...prev,
-											aspectRatio: "",
-										}))
-									}
-								/>
-								<label htmlFor="vertical">すべて</label>
-							</span>
-							<span>
-								<input
-									type="radio"
-									name="aspect_ratio"
-									id="vertical"
-									checked={filters.aspectRatio === "vertical"}
-									onChange={() =>
-										setFilters((prev) => ({
-											...prev,
-											aspectRatio: "vertical",
-										}))
-									}
-								/>
-								<label htmlFor="vertical">縦長</label>
-							</span>
-							<span>
-								<input
-									type="radio"
-									name="aspect_ratio"
-									id="horizontal"
-									checked={filters.aspectRatio === "horizontal"}
-									onChange={() =>
-										setFilters((prev) => ({
-											...prev,
-											aspectRatio: "horizontal",
-										}))
-									}
-								/>
-								<label htmlFor="horizontal">横長</label>
-							</span>
-							<span>
-								<input
-									type="radio"
-									name="aspect_ratio"
-									id="square"
-									checked={filters.aspectRatio === "square"}
-									onChange={() =>
-										setFilters((prev) => ({ ...prev, aspectRatio: "square" }))
-									}
-								/>
-								<label htmlFor="square">正方形</label>
-							</span>
+							{FILTER_ITEMS.filter((item) => visibleFilterItems[item.id]).map(
+								(item) => (
+									<span key={item.id}>
+										<input
+											type="checkbox"
+											id={item.id}
+											checked={filters[item.id]}
+											onChange={(e) =>
+												setFilters((prev) => ({
+													...prev,
+													[item.id]: e.target.checked,
+												}))
+											}
+										/>
+										<label htmlFor={item.id}>{item.label}</label>
+									</span>
+								),
+							)}
+							{hasAspectRatioFilter &&
+								aspectRatioItems.map((item) => (
+									<span key={item.id}>
+										<input
+											type="radio"
+											id={`aspect-${item.id || "all"}`}
+											name="aspect-ratio"
+											checked={aspectRatio === item.id}
+											onChange={() => setAspectRatio(item.id)}
+										/>
+										<label htmlFor={`aspect-${item.id || "all"}`}>
+											{item.label}
+										</label>
+									</span>
+								))}
 						</div>
 					</div>
 				</div>
@@ -340,6 +402,62 @@ function App() {
 							<div className="modalTextFrame">
 								<p>{selectedImage.alt}</p>
 							</div>
+						</div>
+					</div>
+				)}
+				{showSettings && (
+					<div className="modal" onClick={() => setShowSettings(false)}>
+						<button className="close">×</button>
+						<div className="settingModal" onClick={(e) => e.stopPropagation()}>
+							<h3>サマリー表示設定</h3>
+							{SUMMARY_ITEMS.map((item) => (
+								<label key={item.id}>
+									<input
+										type="checkbox"
+										checked={visibleSummaryItems[item.id]}
+										onChange={(e) =>
+											setVisibleSummaryItems((prev) => ({
+												...prev,
+												[item.id]: e.target.checked,
+											}))
+										}
+									/>
+									{item.label}
+								</label>
+							))}
+							<h3>フィルター表示設定</h3>
+							{FILTER_ITEMS.map((item) => (
+								<label key={item.id}>
+									<input
+										type="checkbox"
+										checked={visibleFilterItems[item.id]}
+										onChange={(e) =>
+											setVisibleFilterItems((prev) => ({
+												...prev,
+												[item.id]: e.target.checked,
+											}))
+										}
+									/>
+									{item.label}
+								</label>
+							))}
+							{ASPECT_RATIO_ITEMS.filter((item) => item.id !== "all").map(
+								(item) => (
+									<label key={item.id}>
+										<input
+											type="checkbox"
+											checked={visibleAspectRatioItems[item.id]}
+											onChange={(e) =>
+												setVisibleAspectRatioItems((prev) => ({
+													...prev,
+													[item.id]: e.target.checked,
+												}))
+											}
+										/>
+										{item.label}
+									</label>
+								),
+							)}
 						</div>
 					</div>
 				)}
