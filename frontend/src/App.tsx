@@ -23,7 +23,6 @@ type SummaryId = (typeof SUMMARY_ITEMS)[number]["id"];
 type FilterId = (typeof FILTER_ITEMS)[number]["id"];
 type FilterState = Record<FilterId, boolean>;
 type AspectRatioId = (typeof ASPECT_RATIO_ITEMS)[number]["id"];
-type VisibleAspectRatioId = Exclude<AspectRatioId, "all">;
 
 function App() {
 	const headerRef = useRef<HTMLElement>(null);
@@ -44,21 +43,6 @@ function App() {
 
 	// Summary
 
-	const getLocalStorageItem = <T,>(key: string, defaultValue: T): T => {
-		try {
-			const saved = localStorage.getItem(key);
-
-			if (!saved) return defaultValue;
-
-			return {
-				...defaultValue,
-				...JSON.parse(saved),
-			};
-		} catch {
-			return defaultValue;
-		}
-	};
-
 	const [visibleSummaryItems, setVisibleSummaryItems] = useLocalStorageState(
 		"visibleSummaryItems",
 
@@ -73,22 +57,18 @@ function App() {
 
 	// Filter
 
-	const [visibleFilterItems, setVisibleFilterItems] = useState<
-		Record<FilterId, boolean>
-	>(() =>
-		getLocalStorageItem("visibleFilterItems", {
+	const [visibleFilterItems, setVisibleFilterItems] = useLocalStorageState(
+		"visibleFilterItems",
+		{
 			noAlt: true,
-		}),
+		},
 	);
-	const [visibleAspectRatioItems, setVisibleAspectRatioItems] = useState<
-		Record<VisibleAspectRatioId, boolean>
-	>(() =>
-		getLocalStorageItem("visibleAspectRatioItems", {
+	const [visibleAspectRatioItems, setVisibleAspectRatioItems] =
+		useLocalStorageState("visibleAspectRatioItems", {
 			vertical: true,
 			horizontal: true,
 			square: true,
-		}),
-	);
+		});
 
 	const hasAspectRatioFilter = Object.values(visibleAspectRatioItems).some(
 		Boolean,
@@ -188,27 +168,6 @@ function App() {
 			window.removeEventListener("scroll", handleScroll);
 		};
 	}, []);
-
-	useEffect(() => {
-		localStorage.setItem(
-			"visibleSummaryItems",
-			JSON.stringify(visibleSummaryItems),
-		);
-	}, [visibleSummaryItems]);
-
-	useEffect(() => {
-		localStorage.setItem(
-			"visibleFilterItems",
-			JSON.stringify(visibleFilterItems),
-		);
-	}, [visibleFilterItems]);
-
-	useEffect(() => {
-		localStorage.setItem(
-			"visibleAspectRatioItems",
-			JSON.stringify(visibleAspectRatioItems),
-		);
-	}, [visibleAspectRatioItems]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
