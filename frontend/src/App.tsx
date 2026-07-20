@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { analyzeImages } from "./services/api";
 import "./App.scss";
 import ImageGrid from "./components/ImageGrid";
-import type { ImageData } from "./Types";
+import type { AspectRatioId, FilterState, ImageData, SummaryId } from "./Types";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import {
@@ -18,11 +18,7 @@ import {
 	FILTER_ITEMS,
 } from "./constants/filterDefinitions";
 import { useLocalStorageState } from "./app/hooks/hooks";
-
-type SummaryId = (typeof SUMMARY_ITEMS)[number]["id"];
-type FilterId = (typeof FILTER_ITEMS)[number]["id"];
-type FilterState = Record<FilterId, boolean>;
-type AspectRatioId = (typeof ASPECT_RATIO_ITEMS)[number]["id"];
+import SettingModal from "./components/SettingModal";
 
 function App() {
 	const headerRef = useRef<HTMLElement>(null);
@@ -364,62 +360,16 @@ function App() {
 						</div>
 					</div>
 				)}
-				{showSettings && (
-					<div className="modal" onClick={() => setShowSettings(false)}>
-						<button className="close">×</button>
-						<div className="settingModal" onClick={(e) => e.stopPropagation()}>
-							<h3>サマリー表示設定</h3>
-							{SUMMARY_ITEMS.map((item) => (
-								<label key={item.id}>
-									<input
-										type="checkbox"
-										checked={visibleSummaryItems[item.id]}
-										onChange={(e) =>
-											setVisibleSummaryItems((prev) => ({
-												...prev,
-												[item.id]: e.target.checked,
-											}))
-										}
-									/>
-									{item.label}
-								</label>
-							))}
-							<h3>フィルター表示設定</h3>
-							{FILTER_ITEMS.map((item) => (
-								<label key={item.id}>
-									<input
-										type="checkbox"
-										checked={visibleFilterItems[item.id]}
-										onChange={(e) =>
-											setVisibleFilterItems((prev) => ({
-												...prev,
-												[item.id]: e.target.checked,
-											}))
-										}
-									/>
-									{item.label}
-								</label>
-							))}
-							{ASPECT_RATIO_ITEMS.filter((item) => item.id !== "all").map(
-								(item) => (
-									<label key={item.id}>
-										<input
-											type="checkbox"
-											checked={visibleAspectRatioItems[item.id]}
-											onChange={(e) =>
-												setVisibleAspectRatioItems((prev) => ({
-													...prev,
-													[item.id]: e.target.checked,
-												}))
-											}
-										/>
-										{item.label}
-									</label>
-								),
-							)}
-						</div>
-					</div>
-				)}
+				<SettingModal
+					open={showSettings}
+					onClose={() => setShowSettings(false)}
+					visibleSummaryItems={visibleSummaryItems}
+					setVisibleSummaryItems={setVisibleSummaryItems}
+					visibleFilterItems={visibleFilterItems}
+					setVisibleFilterItems={setVisibleFilterItems}
+					visibleAspectRatioItems={visibleAspectRatioItems}
+					setVisibleAspectRatioItems={setVisibleAspectRatioItems}
+				/>
 			</main>
 		</div>
 	);
