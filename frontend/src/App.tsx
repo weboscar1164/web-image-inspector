@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { analyzeImages } from "./services/api";
 import "./App.scss";
 import ImageGrid from "./components/ImageGrid";
@@ -194,26 +194,28 @@ function App() {
 			)
 		: [];
 
-	const filteredImages = images.filter((img) => {
-		if (filters.noAlt && !hasNoAlt(img)) {
-			return false;
-		}
+	const filteredImages = useMemo(() => {
+		return images.filter((img) => {
+			if (filters.noAlt && !hasNoAlt(img)) {
+				return false;
+			}
 
-		switch (aspectRatio) {
-			case "vertical":
-				return isVertical(img);
+			switch (aspectRatio) {
+				case "vertical":
+					return isVertical(img);
 
-			case "horizontal":
-				return isHorizontal(img);
+				case "horizontal":
+					return isHorizontal(img);
 
-			case "square":
-				return isSquare(img);
+				case "square":
+					return isSquare(img);
 
-			case "all":
-			default:
-				return true;
-		}
-	});
+				case "all":
+				default:
+					return true;
+			}
+		});
+	}, [images, filters.noAlt, aspectRatio]);
 
 	//===============================================
 	// Selection

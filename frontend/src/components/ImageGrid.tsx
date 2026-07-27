@@ -18,6 +18,8 @@ const ImageGrid = ({
 	onToggleSelect,
 	headerHeight,
 }: Props) => {
+	console.log("imageGrid render");
+
 	const wrapperRef = useRef<HTMLDivElement>(null);
 	const [loaded, setLoaded] = useState(false);
 	const [size, setSize] = useState({ width: 0, height: 0 });
@@ -28,6 +30,8 @@ const ImageGrid = ({
 	const columnCount = Math.max(1, Math.floor(size.width / CELL_SIZE));
 
 	useEffect(() => {
+		console.log("Image changed");
+
 		if (images.length > 0) {
 			setLoaded(false);
 			requestAnimationFrame(() => {
@@ -38,6 +42,8 @@ const ImageGrid = ({
 	}, [images]);
 
 	useEffect(() => {
+		console.log("ImageGrid mounted");
+
 		if (!wrapperRef.current) return;
 
 		const observer = new ResizeObserver(([entry]) => {
@@ -49,7 +55,11 @@ const ImageGrid = ({
 
 		observer.observe(wrapperRef.current);
 
-		return () => observer.disconnect();
+		return () => {
+			console.log("ImageGrid unmounted");
+
+			observer.disconnect();
+		};
 	}, []);
 
 	const truncate = (text: string | undefined, maxLength: number): string => {
