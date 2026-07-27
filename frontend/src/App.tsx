@@ -11,13 +11,13 @@ import {
 	isSquare,
 	isVertical,
 } from "./utils/imageHelpers";
-import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
+
 import { SUMMARY_ITEMS } from "./constants/summaryDefinitions";
 import { ASPECT_RATIO_ITEMS } from "./constants/filterDefinitions";
 import { useLocalStorageState } from "./app/hooks/hooks";
 import SettingModal from "./components/SettingModal";
 import Header from "./components/Header";
+import ImageModal from "./components/ImageModal";
 
 function App() {
 	//===============================================
@@ -247,6 +247,9 @@ function App() {
 	//===============================================
 	// Modal
 	//===============================================
+	const closeImageModal = () => {
+		return setSelectedIndex(null);
+	};
 
 	const currentImage =
 		selectedIndex !== null ? filteredImages[selectedIndex] : null;
@@ -363,39 +366,14 @@ function App() {
 					onToggleSelect={toggleSelect}
 					headerHeight={headerHeight}
 				/>
-				{currentImage && (
-					<div className="modal" onClick={() => setSelectedIndex(null)}>
-						<button className="close">×</button>
-						<span className="modalIndex">
-							{selectedIndex !== null ? selectedIndex + 1 : 0} / {images.length}
-						</span>
-						<div className="modalWrapper" onClick={(e) => e.stopPropagation()}>
-							<div className="modalImageFrame">
-								<div className="modalPrevArea" onClick={prevImage}>
-									<ArrowBackIosIcon />
-								</div>
-								<img src={currentImage.src} alt="" />
-								<div className="modalNextArea" onClick={nextImage}>
-									<ArrowForwardIosIcon />
-								</div>
-							</div>
-							<div className="modalInfo">
-								<div>
-									<span>height</span>
-									<strong>{currentImage.height}</strong>
-								</div>
-								<div>
-									<span>width</span>
-									<strong>{currentImage.width}</strong>
-								</div>
-								<div>
-									<span>alt</span>
-									<strong>{currentImage.alt || "none"}</strong>
-								</div>
-							</div>
-						</div>
-					</div>
-				)}
+				<ImageModal
+					currentImage={currentImage}
+					closeImageModal={closeImageModal}
+					selectedIndex={selectedIndex}
+					images={images}
+					prevImage={prevImage}
+					nextImage={nextImage}
+				/>
 				<SettingModal
 					open={showSettings}
 					onClose={() => setShowSettings(false)}
