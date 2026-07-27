@@ -5,7 +5,7 @@ import ImageListItem from "@mui/material/ImageListItem";
 
 type Props = {
 	images: ImageData[];
-	onClickImage: (image: ImageData) => void;
+	onClickImage: (index: number) => void;
 	selectedImages: Set<string>;
 	onToggleSelect: (src: string) => void;
 	headerHeight: number;
@@ -90,7 +90,7 @@ const ImageGrid = ({
 									<img
 										src={image.src}
 										alt={image.alt}
-										onClick={() => onClickImage(image)}
+										onClick={() => onClickImage(index)}
 									/>
 								</div>
 								<p>{truncate(image.alt, 29)}</p>

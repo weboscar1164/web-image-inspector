@@ -11,34 +11,36 @@ import {
 	isSquare,
 	isVertical,
 } from "./utils/imageHelpers";
-import SettingsIcon from "@mui/icons-material/Settings";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import { SUMMARY_ITEMS } from "./constants/summaryDefinitions";
-import {
-	ASPECT_RATIO_ITEMS,
-	FILTER_ITEMS,
-} from "./constants/filterDefinitions";
+import { ASPECT_RATIO_ITEMS } from "./constants/filterDefinitions";
 import { useLocalStorageState } from "./app/hooks/hooks";
 import SettingModal from "./components/SettingModal";
+import Header from "./components/Header";
 
 function App() {
+	//===============================================
+	// Ref
+	//===============================================
 	const headerRef = useRef<HTMLElement>(null);
+
+	//===============================================
+	// State
+	//===============================================
 	const [compactHeader, setCompactHeader] = useState(false);
 	const [headerHeight, setHeaderHeight] = useState(0);
+	const [showDetail, setShowDetail] = useState(false);
 	const [url, setUrl] = useState("");
 	const [images, setImages] = useState<ImageData[]>([]);
 	const [loading, setLoading] = useState(false);
-	const [selectedImage, setSelectedImage] = useState<ImageData | null>(null);
-	const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
-	const [showDetail, setShowDetail] = useState(false);
+	const [showSettings, setShowSettings] = useState(false);
 	const [filters, setFilters] = useState<FilterState>({
 		noAlt: false,
 	});
 	const [aspectRatio, setAspectRatio] = useState<AspectRatioId>("all");
-
-	const [showSettings, setShowSettings] = useState(false);
-
-	// Summary
-
+	const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
+	const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 	const [visibleSummaryItems, setVisibleSummaryItems] = useLocalStorageState(
 		"visibleSummaryItems",
 
@@ -50,9 +52,6 @@ function App() {
 			square: true,
 		},
 	);
-
-	// Filter
-
 	const [visibleFilterItems, setVisibleFilterItems] = useLocalStorageState(
 		"visibleFilterItems",
 		{
@@ -65,82 +64,13 @@ function App() {
 			horizontal: true,
 			square: true,
 		});
+	//===============================================
+	// Derived State
+	//===============================================
 
-	const hasAspectRatioFilter = Object.values(visibleAspectRatioItems).some(
-		Boolean,
-	);
-
-	const aspectRatioItems = hasAspectRatioFilter
-		? ASPECT_RATIO_ITEMS.filter(
-				(item) => item.id === "all" || visibleAspectRatioItems[item.id],
-			)
-		: [];
-
-	const isAllSelected =
-		images.length > 0 && images.every((img) => selectedImages.has(img.src));
-
-	const filteredImages = images.filter((img) => {
-		if (filters.noAlt && !hasNoAlt(img)) {
-			return false;
-		}
-
-		switch (aspectRatio) {
-			case "vertical":
-				return isVertical(img);
-
-			case "horizontal":
-				return isHorizontal(img);
-
-			case "square":
-				return isSquare(img);
-
-			case "all":
-			default:
-				return true;
-		}
-	});
-
-	const verticalCount = images.filter(isVertical).length;
-	const horizontalCount = images.filter(isHorizontal).length;
-	const squareCount = images.filter(isSquare).length;
-	const noAltCount = images.filter(hasNoAlt).length;
-
-	const resetViewState = () => {
-		setFilters({
-			noAlt: false,
-		});
-		setAspectRatio("all");
-		setSelectedImages(new Set());
-		setSelectedImage(null);
-		setShowDetail(false);
-	};
-
-	const summaryValues: Record<SummaryId, number> = {
-		total: images.length,
-		noAlt: noAltCount,
-		vertical: verticalCount,
-		horizontal: horizontalCount,
-		square: squareCount,
-	};
-
-	const summaryItems = SUMMARY_ITEMS.map((item) => ({
-		...item,
-		value: summaryValues[item.id],
-		visible: visibleSummaryItems[item.id],
-	}));
-
-	useEffect(() => {
-		if (!headerRef.current) return;
-
-		const observer = new ResizeObserver((entries) => {
-			setHeaderHeight(entries[0].contentRect.height);
-		});
-
-		observer.observe(headerRef.current);
-
-		return () => observer.disconnect();
-	}, []);
-
+	//===============================================
+	// Header
+	//===============================================
 	useEffect(() => {
 		let lastY = window.scrollY;
 		const handleScroll = () => {
@@ -164,6 +94,34 @@ function App() {
 			window.removeEventListener("scroll", handleScroll);
 		};
 	}, []);
+
+	useEffect(() => {
+		if (!headerRef.current) return;
+
+		const observer = new ResizeObserver((entries) => {
+			setHeaderHeight(entries[0].contentRect.height);
+		});
+
+		observer.observe(headerRef.current);
+
+		return () => observer.disconnect();
+	}, []);
+
+	const onSetUrl = (url: string) => {
+		setUrl(url);
+	};
+
+	const onOpenSettings = () => {
+		setShowSettings(true);
+	};
+
+	const onToggleDetail = () => {
+		setShowDetail((prev) => !prev);
+	};
+
+	//===============================================
+	// Analysys
+	//===============================================
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -190,25 +148,79 @@ function App() {
 		setLoading(false);
 	};
 
-	const handleDownload = async () => {
-		const zip = new JSZip();
-		let i = 0;
+	//===============================================
+	// Summary
+	//===============================================
+	const verticalCount = images.filter(isVertical).length;
+	const horizontalCount = images.filter(isHorizontal).length;
+	const squareCount = images.filter(isSquare).length;
+	const noAltCount = images.filter(hasNoAlt).length;
 
-		for (const url of selectedImages) {
-			try {
-				const res = await fetch(url);
-				const blob = await res.blob();
+	const summaryValues: Record<SummaryId, number> = {
+		total: images.length,
+		noAlt: noAltCount,
+		vertical: verticalCount,
+		horizontal: horizontalCount,
+		square: squareCount,
+	};
 
-				zip.file(`image_${i}.jpg`, blob);
-				i++;
-			} catch (e) {
-				console.error("faild: ", url);
-			}
+	const summaryItems = SUMMARY_ITEMS.map((item) => ({
+		...item,
+		value: summaryValues[item.id],
+		visible: visibleSummaryItems[item.id],
+	}));
+
+	//===============================================
+	// Filter
+	//===============================================
+	const onSetFilters = (itemId: string, value: boolean) => {
+		setFilters((prev) => ({
+			...prev,
+			[itemId]: value,
+		}));
+	};
+
+	const onSetAspectRatio = (itemId: AspectRatioId) => {
+		setAspectRatio(itemId);
+	};
+
+	const hasAspectRatioFilter = Object.values(visibleAspectRatioItems).some(
+		Boolean,
+	);
+
+	const aspectRatioItems = hasAspectRatioFilter
+		? ASPECT_RATIO_ITEMS.filter(
+				(item) => item.id === "all" || visibleAspectRatioItems[item.id],
+			)
+		: [];
+
+	const filteredImages = images.filter((img) => {
+		if (filters.noAlt && !hasNoAlt(img)) {
+			return false;
 		}
 
-		const content = await zip.generateAsync({ type: "blob" });
-		saveAs(content, "images.zip");
-	};
+		switch (aspectRatio) {
+			case "vertical":
+				return isVertical(img);
+
+			case "horizontal":
+				return isHorizontal(img);
+
+			case "square":
+				return isSquare(img);
+
+			case "all":
+			default:
+				return true;
+		}
+	});
+
+	//===============================================
+	// Selection
+	//===============================================
+
+	const isAllSelected =
+		images.length > 0 && images.every((img) => selectedImages.has(img.src));
 
 	const toggleSelect = (src: string) => {
 		setSelectedImages((prev) => {
@@ -232,103 +244,111 @@ function App() {
 		}
 	};
 
+	//===============================================
+	// Modal
+	//===============================================
+
+	const currentImage =
+		selectedIndex !== null ? filteredImages[selectedIndex] : null;
+
+	const nextImage = () => {
+		if (selectedIndex === null) return;
+
+		setSelectedIndex((prev) => {
+			if (prev === null) return null;
+			return (prev + 1) % filteredImages.length;
+		});
+	};
+
+	const prevImage = () => {
+		if (selectedIndex === null) return;
+
+		setSelectedIndex((prev) => {
+			if (prev === null) return null;
+			return (prev - 1 + filteredImages.length) % filteredImages.length;
+		});
+	};
+
+	useEffect(() => {
+		if (selectedIndex === null) return;
+
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "ArrowLeft") {
+				prevImage();
+			}
+			if (e.key === "ArrowRight") {
+				nextImage();
+			}
+			if (e.key === "Escape") {
+				setSelectedIndex(null);
+			}
+		};
+
+		window.addEventListener("keydown", handleKeyDown);
+
+		return () => {
+			window.removeEventListener("keydown", handleKeyDown);
+		};
+	}, [selectedIndex, filteredImages.length]);
+
+	//===============================================
+	// Download
+	//===============================================
+
+	const handleDownload = async () => {
+		const zip = new JSZip();
+		let i = 0;
+
+		for (const url of selectedImages) {
+			try {
+				const res = await fetch(url);
+				const blob = await res.blob();
+
+				zip.file(`image_${i}.jpg`, blob);
+				i++;
+			} catch (e) {
+				console.error("faild: ", url);
+			}
+		}
+
+		const content = await zip.generateAsync({ type: "blob" });
+		saveAs(content, "images.zip");
+	};
+
+	const resetViewState = () => {
+		setFilters({
+			noAlt: false,
+		});
+		setAspectRatio("all");
+		setSelectedImages(new Set());
+		setSelectedIndex(null);
+		setShowDetail(false);
+	};
+
 	return (
 		<div className="app">
-			<header
-				ref={headerRef}
-				className={`header ${compactHeader ? "header-compact" : ""}`}
-			>
-				<div className="container headerContainer">
-					<h1>Web Image Inspector</h1>
-					<div className="headerUpper">
-						<div className="headerForm">
-							<form onSubmit={handleSubmit}>
-								<input
-									type="text"
-									value={url}
-									onChange={(e) => setUrl(e.target.value)}
-									placeholder="https://example.com"
-									onFocus={(e) => {
-										if (e.target.value) {
-											e.target.select();
-										}
-									}}
-									style={{ width: "300px" }}
-								/>
-
-								<button type="submit">Analyze</button>
-							</form>
-							<button onClick={handleDownload}>
-								Download Selected ({selectedImages.size})
-							</button>
-							<button onClick={toggleSelectAll}>
-								{isAllSelected ? "Deselect all" : "Select all"}
-							</button>
-						</div>
-						<button onClick={() => setShowDetail((prev) => !prev)}>
-							Filters{showDetail ? "▲" : "▼"}
-						</button>
-					</div>
-					<div className="headerExtra">
-						<div className="headerSummary">
-							<div className="headerSummaryLeft">
-								<h4>サマリー：</h4>
-								{summaryItems &&
-									summaryItems
-										.filter((item) => item.visible)
-										.map((summaryItem) => (
-											<div className="headerSummaryItem" key={summaryItem.id}>
-												<span>{summaryItem.label}</span>
-												<strong>{summaryItem.value}</strong>
-											</div>
-										))}
-							</div>
-							<button onClick={() => setShowSettings(true)}>
-								<SettingsIcon />
-							</button>
-						</div>
-						<div
-							className={`headerFilter ${showDetail ? "headerFilter--open" : ""}`}
-						>
-							<h4>フィルタ</h4>
-
-							{FILTER_ITEMS.filter((item) => visibleFilterItems[item.id]).map(
-								(item) => (
-									<span key={item.id}>
-										<input
-											type="checkbox"
-											id={item.id}
-											checked={filters[item.id]}
-											onChange={(e) =>
-												setFilters((prev) => ({
-													...prev,
-													[item.id]: e.target.checked,
-												}))
-											}
-										/>
-										<label htmlFor={item.id}>{item.label}</label>
-									</span>
-								),
-							)}
-							{hasAspectRatioFilter &&
-								aspectRatioItems.map((item) => (
-									<span key={item.id}>
-										<input
-											type="radio"
-											id={`aspect-${item.id || "all"}`}
-											name="aspect-ratio"
-											checked={aspectRatio === item.id}
-											onChange={() => setAspectRatio(item.id)}
-										/>
-										<label htmlFor={`aspect-${item.id || "all"}`}>
-											{item.label}
-										</label>
-									</span>
-								))}
-						</div>
-					</div>
-				</div>
-			</header>
+			<Header
+				url={url}
+				headerRef={headerRef}
+				compactHeader={compactHeader}
+				onSetUrl={onSetUrl}
+				handleSubmit={handleSubmit}
+				handleDownload={handleDownload}
+				selectedImages={selectedImages}
+				toggleSelectAll={toggleSelectAll}
+				isAllSelected={isAllSelected}
+				showDetail={showDetail}
+				onToggleDetail={onToggleDetail}
+				summaryItems={summaryItems}
+				onOpenSettings={onOpenSettings}
+				visibleFilterItems={visibleFilterItems}
+				filters={filters}
+				onSetFilters={onSetFilters}
+				hasAspectRatioFilter={hasAspectRatioFilter}
+				aspectRatioItems={aspectRatioItems}
+				aspectRatio={aspectRatio}
+				onSetAspectRatio={onSetAspectRatio}
+			/>
 
 			<main>
 				{loading && (
@@ -338,24 +358,40 @@ function App() {
 				)}
 				<ImageGrid
 					images={filteredImages}
-					onClickImage={setSelectedImage}
+					onClickImage={setSelectedIndex}
 					selectedImages={selectedImages}
 					onToggleSelect={toggleSelect}
 					headerHeight={headerHeight}
 				/>
-				{selectedImage && (
-					<div className="modal" onClick={() => setSelectedImage(null)}>
+				{currentImage && (
+					<div className="modal" onClick={() => setSelectedIndex(null)}>
 						<button className="close">×</button>
-						<div className="modalWrapper">
+						<span className="modalIndex">
+							{selectedIndex !== null ? selectedIndex + 1 : 0} / {images.length}
+						</span>
+						<div className="modalWrapper" onClick={(e) => e.stopPropagation()}>
 							<div className="modalImageFrame">
-								<img
-									src={selectedImage.src}
-									alt=""
-									onClick={(e) => e.stopPropagation()}
-								/>
+								<div className="modalPrevArea" onClick={prevImage}>
+									<ArrowBackIosIcon />
+								</div>
+								<img src={currentImage.src} alt="" />
+								<div className="modalNextArea" onClick={nextImage}>
+									<ArrowForwardIosIcon />
+								</div>
 							</div>
-							<div className="modalTextFrame">
-								<p>{selectedImage.alt}</p>
+							<div className="modalInfo">
+								<div>
+									<span>height</span>
+									<strong>{currentImage.height}</strong>
+								</div>
+								<div>
+									<span>width</span>
+									<strong>{currentImage.width}</strong>
+								</div>
+								<div>
+									<span>alt</span>
+									<strong>{currentImage.alt || "none"}</strong>
+								</div>
 							</div>
 						</div>
 					</div>

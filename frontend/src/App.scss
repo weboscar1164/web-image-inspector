@@ -257,7 +257,17 @@ main {
 	padding: 32px;
 
 	z-index: 1000;
+
+	&Index {
+		position: absolute;
+		top: 10px;
+		left: 50%;
+		transform: translateX(-50%);
+		color: #fff;
+	}
+
 	&ImageFrame {
+		position: relative;
 		display: flex;
 		justify-content: center;
 		align-items: center;
@@ -289,6 +299,44 @@ main {
 			box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
 		}
 	}
+
+	&PrevArea,
+	&NextArea {
+		position: absolute;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		top: 0;
+		width: 30%;
+		height: 100%;
+		z-index: 5;
+		cursor: pointer;
+		background-color: rgba(0, 0, 0, 0);
+		transition: background-color 0.3s ease;
+
+		svg {
+			color: rgba(255, 255, 255, 0.3);
+			height: 50px;
+			width: 50px;
+			transition: color 0.3s ease;
+		}
+
+		&:hover {
+			background-color: rgba(0, 0, 0, 0.2);
+			svg {
+				color: rgba(255, 255, 255, 1);
+			}
+		}
+	}
+
+	&PrevArea {
+		left: 0;
+	}
+
+	&NextArea {
+		right: 0;
+	}
+
 	&Wrapper {
 		position: relative;
 
@@ -311,6 +359,7 @@ main {
 
 		overflow: hidden;
 	}
+
 	&TextFrame {
 		padding: 0 20px 20px 20px;
 
@@ -325,6 +374,32 @@ main {
 			word-break: break-word;
 
 			padding-inline: 4px;
+		}
+	}
+
+	&Info {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 12px;
+
+		padding: 0 20px 20px;
+
+		div {
+			background: rgba(255, 255, 255, 0.05);
+			padding: 10px 14px;
+			border-radius: 10px;
+		}
+
+		span {
+			display: flex;
+			font-size: 11px;
+			color: #aaa;
+			margin-bottom: 4px;
+		}
+
+		strong {
+			color: #fff;
+			font-size: 14px;
 		}
 	}
 }
