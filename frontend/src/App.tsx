@@ -18,6 +18,7 @@ import { useLocalStorageState } from "./app/hooks/hooks";
 import SettingModal from "./components/SettingModal";
 import Header from "./components/Header";
 import ImageModal from "./components/ImageModal";
+import { Snackbar } from "@mui/material";
 
 function App() {
 	//===============================================
@@ -41,6 +42,7 @@ function App() {
 	const [aspectRatio, setAspectRatio] = useState<AspectRatioId>("all");
 	const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
 	const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+	const [snackbarMessage, setSnackbarMesage] = useState("");
 	const [visibleSummaryItems, setVisibleSummaryItems] = useLocalStorageState(
 		"visibleSummaryItems",
 
@@ -65,8 +67,11 @@ function App() {
 			square: true,
 		});
 	//===============================================
-	// Derived State
+	// UI
 	//===============================================
+	const showToast = (message: string) => {
+		setSnackbarMesage(message);
+	};
 
 	//===============================================
 	// Header
@@ -296,6 +301,32 @@ function App() {
 		};
 	}, [selectedIndex, filteredImages.length]);
 
+	const handleCopyImageUrl = () => {
+		if (!currentImage) return;
+
+		navigator.clipboard.writeText(currentImage.src);
+		showToast("Image URL copied");
+	};
+
+	const handleOpenOriginalImage = () => {
+		if (!currentImage) return;
+
+		window.open(currentImage.src, "_blank");
+	};
+
+	const handleDownloadImage = async () => {
+		if (!currentImage) return;
+
+		try {
+			const res = await fetch(currentImage.src);
+			const blob = await res.blob();
+
+			saveAs(blob, "image.jpg");
+		} catch (e) {
+			console.error("failed:", url);
+		}
+	};
+
 	//===============================================
 	// Download
 	//===============================================
@@ -375,6 +406,9 @@ function App() {
 					images={images}
 					prevImage={prevImage}
 					nextImage={nextImage}
+					handleCopyImageUrl={handleCopyImageUrl}
+					handleDownloadImage={handleDownloadImage}
+					handleOpenOriginalImage={handleOpenOriginalImage}
 				/>
 				<SettingModal
 					open={showSettings}
@@ -385,6 +419,16 @@ function App() {
 					setVisibleFilterItems={setVisibleFilterItems}
 					visibleAspectRatioItems={visibleAspectRatioItems}
 					setVisibleAspectRatioItems={setVisibleAspectRatioItems}
+				/>
+				<Snackbar
+					open={Boolean(snackbarMessage)}
+					autoHideDuration={2000}
+					onClose={() => setSnackbarMesage("")}
+					message={snackbarMessage}
+					anchorOrigin={{
+						vertical: "top",
+						horizontal: "center",
+					}}
 				/>
 			</main>
 		</div>

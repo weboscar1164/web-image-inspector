@@ -8,6 +8,7 @@ body {
 
 main {
 	flex: 1;
+	position: relative;
 }
 
 .app {
@@ -257,6 +258,44 @@ main {
 	padding: 32px;
 
 	z-index: 1000;
+	&Close,
+	&MenuOpen {
+		position: absolute !important;
+
+		width: 40px;
+		height: 40px;
+
+		border: none;
+		border-radius: 999px;
+
+		background: rgba(255, 255, 255, 0.08) !important;
+
+		color: white !important;
+
+		font-size: 24px;
+		line-height: 1;
+
+		cursor: pointer;
+
+		transition:
+			background 0.2s ease,
+			transform 0.15s ease;
+
+		&:hover {
+			background: rgba(255, 255, 255, 0.18) !important;
+			transform: scale(1.05);
+		}
+	}
+
+	&Close {
+		top: 18px;
+		right: 22px;
+	}
+
+	&MenuOpen {
+		top: 18px;
+		right: 72px;
+	}
 
 	&Index {
 		position: absolute;
@@ -412,36 +451,6 @@ main {
 	h3 {
 		margin: 0;
 		margin-bottom: 8px;
-	}
-}
-
-.close {
-	position: absolute;
-	top: 18px;
-	right: 22px;
-
-	width: 40px;
-	height: 40px;
-
-	border: none;
-	border-radius: 999px;
-
-	background: rgba(255, 255, 255, 0.08);
-
-	color: white;
-
-	font-size: 24px;
-	line-height: 1;
-
-	cursor: pointer;
-
-	transition:
-		background 0.2s ease,
-		transform 0.15s ease;
-
-	&:hover {
-		background: rgba(255, 255, 255, 0.18);
-		transform: scale(1.05);
 	}
 }
 

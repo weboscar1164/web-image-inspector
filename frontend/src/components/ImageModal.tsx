@@ -1,6 +1,11 @@
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import type { ImageData } from "../Types";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import IconButton from "@mui/material/IconButton";
+import MenuItem from "@mui/material/MenuItem";
+import Menu from "@mui/material/Menu";
+import { useState } from "react";
 
 type Props = {
 	currentImage: ImageData | null;
@@ -9,6 +14,9 @@ type Props = {
 	images: ImageData[];
 	prevImage: () => void;
 	nextImage: () => void;
+	handleCopyImageUrl: () => void;
+	handleDownloadImage: () => void;
+	handleOpenOriginalImage: () => void;
 };
 
 const ImageModal = ({
@@ -18,12 +26,35 @@ const ImageModal = ({
 	images,
 	prevImage,
 	nextImage,
+	handleCopyImageUrl,
+	handleDownloadImage,
+	handleOpenOriginalImage,
 }: Props) => {
+	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+	const open = Boolean(anchorEl);
+
+	const handleMenuOpen = (e: React.MouseEvent<HTMLElement>) => {
+		setAnchorEl(e.currentTarget);
+	};
+
+	const handleMenuClose = () => {
+		setAnchorEl(null);
+	};
 	return (
 		<>
 			{currentImage && (
 				<div className="modal" onClick={closeImageModal}>
-					<button className="close">×</button>
+					<button className="modalClose">×</button>
+					<IconButton
+						onClick={(e) => {
+							e.stopPropagation();
+							handleMenuOpen(e);
+						}}
+						className="modalMenuOpen"
+					>
+						<MoreVertIcon />
+					</IconButton>
 					<span className="modalIndex">
 						{selectedIndex !== null ? selectedIndex + 1 : 0} / {images.length}
 					</span>
@@ -52,6 +83,18 @@ const ImageModal = ({
 							</div>
 						</div>
 					</div>
+					<Menu
+						anchorEl={anchorEl}
+						open={open}
+						onClose={handleMenuClose}
+						onClick={(e) => e.stopPropagation()}
+					>
+						<MenuItem onClick={handleCopyImageUrl}>Copy image URL</MenuItem>
+						<MenuItem onClick={handleDownloadImage}>Download image</MenuItem>
+						<MenuItem onClick={handleOpenOriginalImage}>
+							Open original image
+						</MenuItem>
+					</Menu>
 				</div>
 			)}
 		</>
