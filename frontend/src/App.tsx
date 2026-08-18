@@ -7,9 +7,14 @@ import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import {
 	hasNoAlt,
+	isGif,
 	isHorizontal,
+	isJpeg,
+	isPng,
 	isSquare,
+	isSvg,
 	isVertical,
+	isWebp,
 } from "./utils/imageHelpers";
 
 import { SUMMARY_ITEMS } from "./constants/summaryDefinitions";
@@ -18,7 +23,13 @@ import { useLocalStorageState } from "./app/hooks/hooks";
 import SettingModal from "./components/SettingModal";
 import Header from "./components/Header";
 import ImageModal from "./components/ImageModal";
-import { Snackbar } from "@mui/material";
+import { Snackbar, Alert } from "@mui/material";
+
+type SnackbarState = {
+	open: boolean;
+	message: string;
+	severity: "success" | "info" | "warning" | "error";
+};
 
 function App() {
 	//===============================================
@@ -42,7 +53,11 @@ function App() {
 	const [aspectRatio, setAspectRatio] = useState<AspectRatioId>("all");
 	const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
 	const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-	const [snackbarMessage, setSnackbarMesage] = useState("");
+	const [snackbarState, setSnackbarState] = useState<SnackbarState>({
+		open: false,
+		message: "",
+		severity: "info",
+	});
 	const [visibleSummaryItems, setVisibleSummaryItems] = useLocalStorageState(
 		"visibleSummaryItems",
 
@@ -52,6 +67,11 @@ function App() {
 			vertical: true,
 			horizontal: true,
 			square: true,
+			jpeg: true,
+			png: true,
+			gif: true,
+			svg: true,
+			webp: true,
 		},
 	);
 	const [visibleFilterItems, setVisibleFilterItems] = useLocalStorageState(
@@ -69,8 +89,11 @@ function App() {
 	//===============================================
 	// UI
 	//===============================================
-	const showToast = (message: string) => {
-		setSnackbarMesage(message);
+	const showToast = (
+		message: string,
+		severity: SnackbarState["severity"] = "info",
+	) => {
+		setSnackbarState({ open: true, message, severity });
 	};
 
 	//===============================================
@@ -160,6 +183,11 @@ function App() {
 	const horizontalCount = images.filter(isHorizontal).length;
 	const squareCount = images.filter(isSquare).length;
 	const noAltCount = images.filter(hasNoAlt).length;
+	const jpegCount = images.filter(isJpeg).length;
+	const pngCount = images.filter(isPng).length;
+	const gifCount = images.filter(isGif).length;
+	const svgCount = images.filter(isSvg).length;
+	const webpCount = images.filter(isWebp).length;
 
 	const summaryValues: Record<SummaryId, number> = {
 		total: images.length,
@@ -167,6 +195,11 @@ function App() {
 		vertical: verticalCount,
 		horizontal: horizontalCount,
 		square: squareCount,
+		jpeg: jpegCount,
+		png: pngCount,
+		gif: gifCount,
+		svg: svgCount,
+		webp: webpCount,
 	};
 
 	const summaryItems = SUMMARY_ITEMS.map((item) => ({
@@ -301,11 +334,16 @@ function App() {
 		};
 	}, [selectedIndex, filteredImages.length]);
 
-	const handleCopyImageUrl = () => {
+	const handleCopyImageUrl = async () => {
 		if (!currentImage) return;
 
-		navigator.clipboard.writeText(currentImage.src);
-		showToast("Image URL copied");
+		try {
+			await navigator.clipboard.writeText(currentImage.src);
+			showToast("Image URL copied", "success");
+		} catch (e) {
+			console.error("Faled to copy URL: ", e);
+			showToast("Faled to copy URL", "error");
+		}
 	};
 
 	const handleOpenOriginalImage = () => {
@@ -322,8 +360,10 @@ function App() {
 			const blob = await res.blob();
 
 			saveAs(blob, "image.jpg");
+			showToast("Download success", "success");
 		} catch (e) {
 			console.error("failed:", url);
+			showToast("Download failed", "error");
 		}
 	};
 
@@ -334,21 +374,33 @@ function App() {
 	const handleDownload = async () => {
 		const zip = new JSZip();
 		let i = 0;
+		let failedCount = 0;
 
-		for (const url of selectedImages) {
-			try {
-				const res = await fetch(url);
-				const blob = await res.blob();
+		try {
+			for (const url of selectedImages) {
+				try {
+					const res = await fetch(url);
+					const blob = await res.blob();
 
-				zip.file(`image_${i}.jpg`, blob);
-				i++;
-			} catch (e) {
-				console.error("faild: ", url);
+					zip.file(`image_${i}.jpg`, blob);
+					i++;
+				} catch {
+					failedCount++;
+				}
 			}
-		}
 
-		const content = await zip.generateAsync({ type: "blob" });
-		saveAs(content, "images.zip");
+			const content = await zip.generateAsync({ type: "blob" });
+			saveAs(content, "images.zip");
+
+			if (failedCount > 0) {
+				showToast(`${failedCount} images failed to download`, "warning");
+			} else {
+				showToast("Download success", "success");
+			}
+		} catch (e) {
+			console.error("download error: ", e);
+			showToast("Download failed", "error");
+		}
 	};
 
 	const resetViewState = () => {
@@ -392,6 +444,7 @@ function App() {
 						<p>Loading...</p>
 					</div>
 				)}
+
 				<ImageGrid
 					images={filteredImages}
 					onClickImage={setSelectedIndex}
@@ -399,6 +452,7 @@ function App() {
 					onToggleSelect={toggleSelect}
 					headerHeight={headerHeight}
 				/>
+
 				<ImageModal
 					currentImage={currentImage}
 					closeImageModal={closeImageModal}
@@ -410,6 +464,7 @@ function App() {
 					handleDownloadImage={handleDownloadImage}
 					handleOpenOriginalImage={handleOpenOriginalImage}
 				/>
+
 				<SettingModal
 					open={showSettings}
 					onClose={() => setShowSettings(false)}
@@ -420,16 +475,20 @@ function App() {
 					visibleAspectRatioItems={visibleAspectRatioItems}
 					setVisibleAspectRatioItems={setVisibleAspectRatioItems}
 				/>
+
 				<Snackbar
-					open={Boolean(snackbarMessage)}
+					open={snackbarState.open}
 					autoHideDuration={2000}
-					onClose={() => setSnackbarMesage("")}
-					message={snackbarMessage}
+					onClose={() => setSnackbarState((prev) => ({ ...prev, open: false }))}
 					anchorOrigin={{
 						vertical: "top",
 						horizontal: "center",
 					}}
-				/>
+				>
+					<Alert severity={snackbarState.severity} variant="filled">
+						{snackbarState.message}
+					</Alert>
+				</Snackbar>
 			</main>
 		</div>
 	);

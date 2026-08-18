@@ -19,4 +19,24 @@ export const SUMMARY_ITEMS = [
 		id: "square",
 		label: "正方形",
 	},
+	{
+		id: "jpeg",
+		label: "jpeg",
+	},
+	{
+		id: "png",
+		label: "png",
+	},
+	{
+		id: "gif",
+		label: "gif",
+	},
+	{
+		id: "svg",
+		label: "svg",
+	},
+	{
+		id: "webp",
+		label: "webp",
+	},
 ] as const;
