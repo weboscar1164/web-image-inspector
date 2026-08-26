@@ -8,18 +8,6 @@ export const SUMMARY_ITEMS = [
 		label: "altなし",
 	},
 	{
-		id: "vertical",
-		label: "縦長",
-	},
-	{
-		id: "horizontal",
-		label: "横長",
-	},
-	{
-		id: "square",
-		label: "正方形",
-	},
-	{
 		id: "jpeg",
 		label: "jpeg",
 	},
@@ -38,5 +26,17 @@ export const SUMMARY_ITEMS = [
 	{
 		id: "webp",
 		label: "webp",
+	},
+	{
+		id: "vertical",
+		label: "縦長",
+	},
+	{
+		id: "horizontal",
+		label: "横長",
+	},
+	{
+		id: "square",
+		label: "正方形",
 	},
 ] as const;

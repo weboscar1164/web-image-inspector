@@ -81,6 +81,10 @@ const ImageModal = ({
 								<span>alt</span>
 								<strong>{currentImage.alt || "none"}</strong>
 							</div>
+							<div>
+								<span>type</span>
+								<strong>{currentImage.type}</strong>
+							</div>
 						</div>
 					</div>
 					<Menu

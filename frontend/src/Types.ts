@@ -9,6 +9,7 @@ export interface ImageData {
 	alt?: string;
 	width: number;
 	height: number;
+	type: string;
 }
 
 export type SummaryId = (typeof SUMMARY_ITEMS)[number]["id"];

@@ -8,12 +8,15 @@ export const isSquare = (Img: ImageData) => Img.width === Img.height;
 
 export const hasNoAlt = (Img: ImageData) => !Img.alt?.trim();
 
-export const isJpeg = (img: ImageData) => /\.(jpg|jpeg)(\?|$)/gim.test(img.src);
+export const isJpeg = (img: ImageData) =>
+	img.type === "jpg" || img.type === "jpeg";
 
-export const isPng = (img: ImageData) => /\.png(\?|$)/gim.test(img.src);
+export const isPng = (img: ImageData) => img.type === "png";
 
-export const isGif = (img: ImageData) => /\.gif(\?|$)/gim.test(img.src);
+export const isGif = (img: ImageData) => img.type === "gif";
 
-export const isSvg = (img: ImageData) => /\.svg(\?|$)/gim.test(img.src);
+export const isSvg = (img: ImageData) => img.type === "svg";
 
-export const isWebp = (img: ImageData) => /\.webp(\?|$)/gim.test(img.src);
+export const isWebp = (img: ImageData) => img.type === "webp";
+
+export const isAvif = (img: ImageData) => img.type === "avif";

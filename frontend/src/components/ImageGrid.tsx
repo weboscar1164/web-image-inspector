@@ -18,7 +18,7 @@ const ImageGrid = ({
 	onToggleSelect,
 	headerHeight,
 }: Props) => {
-	console.log("imageGrid render");
+	// console.log("imageGrid render");
 
 	const wrapperRef = useRef<HTMLDivElement>(null);
 	const [loaded, setLoaded] = useState(false);
@@ -30,7 +30,7 @@ const ImageGrid = ({
 	const columnCount = Math.max(1, Math.floor(size.width / CELL_SIZE));
 
 	useEffect(() => {
-		console.log("Image changed");
+		// console.log("Image changed");
 
 		if (images.length > 0) {
 			setLoaded(false);
@@ -42,7 +42,7 @@ const ImageGrid = ({
 	}, [images]);
 
 	useEffect(() => {
-		console.log("ImageGrid mounted");
+		// console.log("ImageGrid mounted");
 
 		if (!wrapperRef.current) return;
 

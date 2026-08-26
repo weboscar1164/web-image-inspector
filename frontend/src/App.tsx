@@ -7,14 +7,9 @@ import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import {
 	hasNoAlt,
-	isGif,
 	isHorizontal,
-	isJpeg,
-	isPng,
 	isSquare,
-	isSvg,
 	isVertical,
-	isWebp,
 } from "./utils/imageHelpers";
 
 import { SUMMARY_ITEMS } from "./constants/summaryDefinitions";
@@ -49,6 +44,12 @@ function App() {
 	const [showSettings, setShowSettings] = useState(false);
 	const [filters, setFilters] = useState<FilterState>({
 		noAlt: false,
+		jpeg: false,
+		png: false,
+		gif: false,
+		svg: false,
+		webp: false,
+		avif: false,
 	});
 	const [aspectRatio, setAspectRatio] = useState<AspectRatioId>("all");
 	const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
@@ -64,20 +65,26 @@ function App() {
 		{
 			total: true,
 			noAlt: true,
-			vertical: true,
-			horizontal: true,
-			square: true,
 			jpeg: true,
 			png: true,
 			gif: true,
 			svg: true,
 			webp: true,
+			square: true,
+			vertical: true,
+			horizontal: true,
 		},
 	);
 	const [visibleFilterItems, setVisibleFilterItems] = useLocalStorageState(
 		"visibleFilterItems",
 		{
 			noAlt: true,
+			jpeg: true,
+			png: true,
+			gif: true,
+			svg: true,
+			webp: true,
+			avif: true,
 		},
 	);
 	const [visibleAspectRatioItems, setVisibleAspectRatioItems] =
@@ -183,11 +190,16 @@ function App() {
 	const horizontalCount = images.filter(isHorizontal).length;
 	const squareCount = images.filter(isSquare).length;
 	const noAltCount = images.filter(hasNoAlt).length;
-	const jpegCount = images.filter(isJpeg).length;
-	const pngCount = images.filter(isPng).length;
-	const gifCount = images.filter(isGif).length;
-	const svgCount = images.filter(isSvg).length;
-	const webpCount = images.filter(isWebp).length;
+
+	const typeCounts = images.reduce(
+		(acc, img) => {
+			acc[img.type] = (acc[img.type] ?? 0) + 1;
+			return acc;
+		},
+		{} as Record<string, number>,
+	);
+
+	const jpegCount = (typeCounts.jpg ?? 0) + (typeCounts.jpeg ?? 0);
 
 	const summaryValues: Record<SummaryId, number> = {
 		total: images.length,
@@ -196,10 +208,10 @@ function App() {
 		horizontal: horizontalCount,
 		square: squareCount,
 		jpeg: jpegCount,
-		png: pngCount,
-		gif: gifCount,
-		svg: svgCount,
-		webp: webpCount,
+		png: typeCounts.png ?? 0,
+		gif: typeCounts.gif ?? 0,
+		svg: typeCounts.svg ?? 0,
+		webp: typeCounts.webp ?? 0,
 	};
 
 	const summaryItems = SUMMARY_ITEMS.map((item) => ({
@@ -233,8 +245,21 @@ function App() {
 		: [];
 
 	const filteredImages = useMemo(() => {
+		const selectedTypes: string[] = [];
+
+		if (filters.jpeg) selectedTypes.push("jpg", "jpeg");
+		if (filters.png) selectedTypes.push("png");
+		if (filters.gif) selectedTypes.push("gif");
+		if (filters.svg) selectedTypes.push("svg");
+		if (filters.webp) selectedTypes.push("webp");
+		if (filters.avif) selectedTypes.push("avif");
+
 		return images.filter((img) => {
 			if (filters.noAlt && !hasNoAlt(img)) {
+				return false;
+			}
+
+			if (selectedTypes.length > 0 && !selectedTypes.includes(img.type)) {
 				return false;
 			}
 
@@ -253,7 +278,7 @@ function App() {
 					return true;
 			}
 		});
-	}, [images, filters.noAlt, aspectRatio]);
+	}, [images, filters, aspectRatio]);
 
 	//===============================================
 	// Selection
@@ -406,6 +431,12 @@ function App() {
 	const resetViewState = () => {
 		setFilters({
 			noAlt: false,
+			jpeg: false,
+			png: false,
+			gif: false,
+			svg: false,
+			webp: false,
+			avif: false,
 		});
 		setAspectRatio("all");
 		setSelectedImages(new Set());
