@@ -1,73 +1,56 @@
-# React + TypeScript + Vite
+# Web Image Inspector
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Webページ内の画像を解析し、
+alt属性・画像形式・アスペクト比などを可視化できるツールです。
 
-Currently, two official plugins are available:
+SEOやアクセシビリティの確認、
+画像管理やWeb制作時のチェック用途を想定しています。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- URLを指定してページ内画像を解析
+- alt属性の有無を確認
+- JPEG / PNG / GIF / WEBP / AVIF を判定
+- 縦長 / 横長 / 正方形の分類
+- 画像一覧表示
+- 画像プレビュー
+- 複数画像の一括ダウンロード
+- フィルタリング機能
+- サマリー表示
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Screenshot
 
-## Expanding the ESLint configuration
+![Main Screen](docs/main.png)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+![Image Modal](docs/modal.png)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Tech Stack
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Frontend
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- React
+- TypeScript
+- Vite
+- Material UI
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Backend
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- FastAPI
+- BeautifulSoup4
+- Requests
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Motivation
+
+Webページ内の画像を確認したい場面では、
+ブラウザの開発者ツールだけでは一覧性が低く、
+alt属性や画像形式の確認にも手間がかかります。
+
+そのため、画像情報をまとめて分析できるツールとして開発しました。
+
+## Roadmap
+
+- 設定画面の強化
+- 画像メタデータ表示
+- 画像サイズ分析
+- ダークモード
+- PWA対応
