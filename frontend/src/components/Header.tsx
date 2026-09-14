@@ -1,19 +1,20 @@
 import SettingsIcon from "@mui/icons-material/Settings";
-import { FILTER_ITEMS } from "../constants/filterDefinitions";
-import type { AspectRatioId, FilterId, FilterState } from "../Types";
+import {
+	ALT_ITEMS,
+	ASPECT_RATIO_ITEMS,
+	FILTER_ITEMS,
+	FORMAT_ITEMS,
+} from "../constants/filterDefinitions";
+import type { FilterCategoryId, FilterState, FormatFilterId } from "../Types";
 import type { RefObject } from "react";
 import type React from "react";
+import { Select, MenuItem } from "@mui/material";
 
 type SummaryItem = {
 	id: string;
 	label: string;
 	value: number;
 	visible: boolean;
-};
-
-type AspectRatioItem = {
-	id: AspectRatioId;
-	label: string;
 };
 
 type Props = {
@@ -30,13 +31,9 @@ type Props = {
 	onToggleDetail: () => void;
 	summaryItems: SummaryItem[];
 	onOpenSettings: () => void;
-	visibleFilterItems: Record<string, boolean>;
+	visibleFilterItems: Record<FilterCategoryId, boolean>;
 	filters: FilterState;
-	onSetFilters: (itemId: FilterId, value: boolean) => void;
-	hasAspectRatioFilter: boolean;
-	aspectRatioItems: AspectRatioItem[];
-	aspectRatio: AspectRatioId;
-	onSetAspectRatio: (itemId: AspectRatioId) => void;
+	onSetFilters: (category: string, value: string | string[]) => void;
 };
 
 const Header = ({
@@ -53,14 +50,11 @@ const Header = ({
 	onToggleDetail,
 	summaryItems,
 	onOpenSettings,
-	visibleFilterItems,
 	filters,
+	visibleFilterItems,
 	onSetFilters,
-	hasAspectRatioFilter,
-	aspectRatioItems,
-	aspectRatio,
-	onSetAspectRatio,
 }: Props) => {
+	console.log(filters);
 	return (
 		<header
 			ref={headerRef}
@@ -119,35 +113,96 @@ const Header = ({
 						className={`headerFilter ${showDetail ? "headerFilter--open" : ""}`}
 					>
 						<h4>フィルタ</h4>
+						{FILTER_ITEMS.filter((filter) => visibleFilterItems[filter.id]).map(
+							(filter) => {
+								switch (filter.id) {
+									case "alt":
+										return (
+											<div key={filter.id} className="headerFilterRow">
+												<span>{filter.label}</span>
+												<Select
+													size="small"
+													value={filters.alt}
+													onChange={(e) => onSetFilters("alt", e.target.value)}
+												>
+													{ALT_ITEMS.map((item) => (
+														<MenuItem key={item.id} value={item.id}>
+															{item.label}
+														</MenuItem>
+													))}
+												</Select>
+											</div>
+										);
+									case "aspectRatio":
+										return (
+											<div key={filter.id} className="headerFilterRow">
+												<span>{filter.label}</span>
+												<Select
+													size="small"
+													value={filters.aspectRatio}
+													onChange={(e) =>
+														onSetFilters("aspectRatio", e.target.value)
+													}
+												>
+													{ASPECT_RATIO_ITEMS.map((item) => (
+														<MenuItem key={item.id} value={item.id}>
+															{item.label}
+														</MenuItem>
+													))}
+												</Select>
+											</div>
+										);
+									case "formats":
+										return (
+											<div key={filter.id} className="headerFilterRow">
+												<span>{filter.label}</span>
 
-						{FILTER_ITEMS.filter((item) => visibleFilterItems[item.id]).map(
-							(item) => (
-								<span key={item.id}>
-									<input
-										type="checkbox"
-										id={item.id}
-										checked={filters[item.id]}
-										onChange={(e) => onSetFilters(item.id, e.target.checked)}
-									/>
-									<label htmlFor={item.id}>{item.label}</label>
-								</span>
-							),
+												<Select
+													size="small"
+													multiple
+													displayEmpty
+													value={filters.formats}
+													renderValue={(selected) => {
+														console.log(selected);
+														if (selected.length === 0) {
+															return "すべて";
+														}
+
+														if (selected.length === 1) {
+															return selected[0];
+														}
+
+														return `${selected.length} selected`;
+													}}
+													onChange={(e) => {
+														const values = e.target.value as string[];
+
+														if (values.includes("all")) {
+															onSetFilters("formats", []);
+															return;
+														}
+														onSetFilters(
+															"formats",
+															e.target.value as FormatFilterId[],
+														);
+													}}
+												>
+													{filters.formats.length !== 0 ? (
+														<MenuItem value="all">すべて</MenuItem>
+													) : (
+														""
+													)}
+													{FORMAT_ITEMS.map((item) => (
+														<MenuItem key={item.id} value={item.id}>
+															{item.label}
+														</MenuItem>
+													))}
+												</Select>
+											</div>
+										);
+								}
+							},
 						)}
-						{hasAspectRatioFilter &&
-							aspectRatioItems.map((item) => (
-								<span key={item.id}>
-									<input
-										type="radio"
-										id={`aspect-${item.id || "all"}`}
-										name="aspect-ratio"
-										checked={aspectRatio === item.id}
-										onChange={() => onSetAspectRatio(item.id)}
-									/>
-									<label htmlFor={`aspect-${item.id || "all"}`}>
-										{item.label}
-									</label>
-								</span>
-							))}
 					</div>
 				</div>
 			</div>

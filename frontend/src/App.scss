@@ -105,8 +105,11 @@ main {
 		flex-wrap: wrap;
 
 		button {
-			padding: 5px 12px;
+			width: 36px;
+			height: 36px;
+			padding: 0;
 		}
+
 		&Left {
 			display: flex;
 			align-items: center;
@@ -121,6 +124,15 @@ main {
 				margin: 0;
 			}
 		}
+
+		&Item {
+			display: flex;
+			gap: 4px;
+			padding: 4px 10px;
+			background: #fff;
+			border-radius: 999px;
+			border: 1px solid #ddd;
+		}
 	}
 
 	&Filter {
@@ -128,6 +140,7 @@ main {
 		display: flex;
 		align-items: center;
 		flex-wrap: wrap;
+		gap: 16px;
 		opacity: 0;
 		max-height: 0;
 		padding-top: 0;
@@ -144,6 +157,12 @@ main {
 			max-height: 200px;
 			opacity: 1;
 			padding-top: 5px;
+		}
+
+		&Row {
+			display: flex;
+			align-items: center;
+			gap: 8px;
 		}
 	}
 

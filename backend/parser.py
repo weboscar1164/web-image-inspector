@@ -4,6 +4,16 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from urllib.parse import urlparse
 
+IMAGE_TYPE_MAP = {
+    ".jpg": "jpeg",
+    ".jpeg": "jpeg",
+    ".png": "png",
+    ".webp": "webp",
+    ".gif": "gif",
+    ".svg": "svg",
+    ".avif": "avif",
+}
+
 def extract_images(url:str):
 
     headers = {
@@ -11,12 +21,12 @@ def extract_images(url:str):
     }
 
     response = requests.get(url, headers=headers)
-    html = response.content
-    soup = BeautifulSoup(html, "html.parser")
 
     if response.status_code != 200:
         return {"count":0, "images":[]}
     
+    html = response.content
+    soup = BeautifulSoup(html, "html.parser")
     
     image_urls = set()
     images = []
@@ -86,7 +96,9 @@ def is_valid_image(url: str):
         return False
     
     # 拡張子チェック（簡易）
-    if not any(ext in url.lower() for ext in [".jpg", ".jpeg", ".png",".webp",".gif",".svg",".avif" ]):
+    path = urlparse(url).path
+    ext = os.path.splitext(path)[1].lower()
+    if ext not in IMAGE_TYPE_MAP:
         return False
 
     return True
@@ -95,15 +107,4 @@ def get_image_type(url:str) -> str:
     path = urlparse(url).path
     ext = os.path.splitext(path)[1].lower()
 
-    ext_map = {
-        ".jpg":"jpg",
-        ".jpeg":"jpeg",
-        ".png":"png",
-        ".webp":"webp",
-        ".gif":"gif",
-        ".svg":"svg",
-        ".avif":"avif",
-    }
-
-    
-    return ext_map.get(ext, "unknown")
+    return IMAGE_TYPE_MAP.get(ext, "unknown")

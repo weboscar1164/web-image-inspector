@@ -1,23 +1,16 @@
 import type { Dispatch, SetStateAction } from "react";
-import {
-	ASPECT_RATIO_ITEMS,
-	FILTER_ITEMS,
-} from "../constants/filterDefinitions";
+import { FILTER_ITEMS } from "../constants/filterDefinitions";
 import { SUMMARY_ITEMS } from "../constants/summaryDefinitions";
-import type { FilterId, SummaryId, VisibleAspectRatioId } from "../Types";
+import type { FilterCategoryId, SummaryId } from "../Types";
 
 type Props = {
 	open: boolean;
 	onClose: () => void;
 	visibleSummaryItems: Record<SummaryId, boolean>;
 	setVisibleSummaryItems: Dispatch<SetStateAction<Record<SummaryId, boolean>>>;
-
-	visibleFilterItems: Record<FilterId, boolean>;
-	setVisibleFilterItems: Dispatch<SetStateAction<Record<FilterId, boolean>>>;
-
-	visibleAspectRatioItems: Record<VisibleAspectRatioId, boolean>;
-	setVisibleAspectRatioItems: Dispatch<
-		SetStateAction<Record<VisibleAspectRatioId, boolean>>
+	visibleFilterItems: Record<FilterCategoryId, boolean>;
+	setVisibleFilterItems: Dispatch<
+		SetStateAction<Record<FilterCategoryId, boolean>>
 	>;
 };
 const SettingModal = ({
@@ -27,8 +20,6 @@ const SettingModal = ({
 	setVisibleSummaryItems,
 	visibleFilterItems,
 	setVisibleFilterItems,
-	visibleAspectRatioItems,
-	setVisibleAspectRatioItems,
 }: Props) => {
 	return (
 		<>
@@ -68,23 +59,6 @@ const SettingModal = ({
 								{item.label}
 							</label>
 						))}
-						{ASPECT_RATIO_ITEMS.filter((item) => item.id !== "all").map(
-							(item) => (
-								<label key={item.id}>
-									<input
-										type="checkbox"
-										checked={visibleAspectRatioItems[item.id]}
-										onChange={(e) =>
-											setVisibleAspectRatioItems((prev) => ({
-												...prev,
-												[item.id]: e.target.checked,
-											}))
-										}
-									/>
-									{item.label}
-								</label>
-							),
-						)}
 					</div>
 				</div>
 			)}

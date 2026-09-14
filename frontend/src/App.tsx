@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { analyzeImages } from "./services/api";
 import "./App.scss";
 import ImageGrid from "./components/ImageGrid";
-import type { AspectRatioId, FilterState, ImageData, SummaryId } from "./Types";
+import type { FilterState, ImageData, SummaryId } from "./Types";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import {
@@ -13,7 +13,6 @@ import {
 } from "./utils/imageHelpers";
 
 import { SUMMARY_ITEMS } from "./constants/summaryDefinitions";
-import { ASPECT_RATIO_ITEMS } from "./constants/filterDefinitions";
 import { useLocalStorageState } from "./app/hooks/hooks";
 import SettingModal from "./components/SettingModal";
 import Header from "./components/Header";
@@ -42,16 +41,13 @@ function App() {
 	const [images, setImages] = useState<ImageData[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [showSettings, setShowSettings] = useState(false);
+
 	const [filters, setFilters] = useState<FilterState>({
-		noAlt: false,
-		jpeg: false,
-		png: false,
-		gif: false,
-		svg: false,
-		webp: false,
-		avif: false,
+		alt: "all",
+		aspectRatio: "all",
+		formats: [],
 	});
-	const [aspectRatio, setAspectRatio] = useState<AspectRatioId>("all");
+
 	const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
 	const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 	const [snackbarState, setSnackbarState] = useState<SnackbarState>({
@@ -78,21 +74,12 @@ function App() {
 	const [visibleFilterItems, setVisibleFilterItems] = useLocalStorageState(
 		"visibleFilterItems",
 		{
-			noAlt: true,
-			jpeg: true,
-			png: true,
-			gif: true,
-			svg: true,
-			webp: true,
-			avif: true,
+			alt: true,
+			aspectRatio: true,
+			formats: true,
 		},
 	);
-	const [visibleAspectRatioItems, setVisibleAspectRatioItems] =
-		useLocalStorageState("visibleAspectRatioItems", {
-			vertical: true,
-			horizontal: true,
-			square: true,
-		});
+
 	//===============================================
 	// UI
 	//===============================================
@@ -223,39 +210,22 @@ function App() {
 	//===============================================
 	// Filter
 	//===============================================
-	const onSetFilters = (itemId: string, value: boolean) => {
+	const onSetFilters = (category: string, value: string | string[]) => {
 		setFilters((prev) => ({
 			...prev,
-			[itemId]: value,
+			[category]: value,
 		}));
 	};
 
-	const onSetAspectRatio = (itemId: AspectRatioId) => {
-		setAspectRatio(itemId);
-	};
-
-	const hasAspectRatioFilter = Object.values(visibleAspectRatioItems).some(
-		Boolean,
-	);
-
-	const aspectRatioItems = hasAspectRatioFilter
-		? ASPECT_RATIO_ITEMS.filter(
-				(item) => item.id === "all" || visibleAspectRatioItems[item.id],
-			)
-		: [];
-
 	const filteredImages = useMemo(() => {
-		const selectedTypes: string[] = [];
-
-		if (filters.jpeg) selectedTypes.push("jpg", "jpeg");
-		if (filters.png) selectedTypes.push("png");
-		if (filters.gif) selectedTypes.push("gif");
-		if (filters.svg) selectedTypes.push("svg");
-		if (filters.webp) selectedTypes.push("webp");
-		if (filters.avif) selectedTypes.push("avif");
+		const selectedTypes: string[] = filters.formats;
 
 		return images.filter((img) => {
-			if (filters.noAlt && !hasNoAlt(img)) {
+			if (filters.alt === "noAlt" && !hasNoAlt(img)) {
+				return false;
+			}
+
+			if (filters.alt === "hasAlt" && hasNoAlt(img)) {
 				return false;
 			}
 
@@ -263,7 +233,7 @@ function App() {
 				return false;
 			}
 
-			switch (aspectRatio) {
+			switch (filters.aspectRatio) {
 				case "vertical":
 					return isVertical(img);
 
@@ -278,7 +248,7 @@ function App() {
 					return true;
 			}
 		});
-	}, [images, filters, aspectRatio]);
+	}, [images, filters]);
 
 	//===============================================
 	// Selection
@@ -430,15 +400,10 @@ function App() {
 
 	const resetViewState = () => {
 		setFilters({
-			noAlt: false,
-			jpeg: false,
-			png: false,
-			gif: false,
-			svg: false,
-			webp: false,
-			avif: false,
+			alt: "all",
+			aspectRatio: "all",
+			formats: [],
 		});
-		setAspectRatio("all");
 		setSelectedImages(new Set());
 		setSelectedIndex(null);
 		setShowDetail(false);
@@ -463,10 +428,6 @@ function App() {
 				visibleFilterItems={visibleFilterItems}
 				filters={filters}
 				onSetFilters={onSetFilters}
-				hasAspectRatioFilter={hasAspectRatioFilter}
-				aspectRatioItems={aspectRatioItems}
-				aspectRatio={aspectRatio}
-				onSetAspectRatio={onSetAspectRatio}
 			/>
 
 			<main>
@@ -503,8 +464,6 @@ function App() {
 					setVisibleSummaryItems={setVisibleSummaryItems}
 					visibleFilterItems={visibleFilterItems}
 					setVisibleFilterItems={setVisibleFilterItems}
-					visibleAspectRatioItems={visibleAspectRatioItems}
-					setVisibleAspectRatioItems={setVisibleAspectRatioItems}
 				/>
 
 				<Snackbar
